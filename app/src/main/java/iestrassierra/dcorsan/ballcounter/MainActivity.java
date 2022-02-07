@@ -1,5 +1,6 @@
 package iestrassierra.dcorsan.ballcounter;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import java.util.concurrent.ExecutorService;
@@ -25,6 +27,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        View decorView = getWindow().getDecorView();
+        // Hide the navigation bar, status bar and action bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.hide();
+
         container = findViewById(R.id.container);
 
         executorService.execute(((Runnable) () -> {
@@ -34,9 +44,9 @@ public class MainActivity extends AppCompatActivity {
             int scrWidth = displayMetrics.widthPixels;
 
             int size = 150;
-            int speed = 5;
+            int speed = 10;
 
-            BallView[] balls = new BallView[6];
+            BallView[] balls = new BallView[30];
             Paint paint = new Paint();
             paint.setColor(Color.argb(255, (int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
 
@@ -47,26 +57,61 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < balls.length; i++) {
                 balls[i] = new BallView(this, size, paint);
                 container.addView(balls[i], params);
-                int defaultPos = 300;
-                balls[i].setY(defaultPos * (int)((i + 1) * defaultPos / scrHeight));
-                balls[i].setX((i + 1) * defaultPos);
+                int margin = 100;
+                balls[i].setY((int)(Math.random() * (scrHeight - (size + margin))));
+                balls[i].setX((int)(Math.random() * (scrWidth - (size + margin))));
             }
+
             try {
-                Thread.sleep(5000);
+                Thread.sleep(3000);
                 while (true) {
-
-                        Thread.sleep(16);
-                        for (BallView ball : balls) {
-                            ball.setX((ball.getX() < scrWidth ? ball.getX() : 0) + speed);
-                            ball.setY((ball.getY() < scrHeight ? ball.getY() : 0) + speed);
-                        }
-
+                    Thread.sleep(1000 / 60);
+                    for (BallView ball : balls) {
+                        moveBall(ball, speed, scrWidth - size, scrHeight - size, true);
+                    }
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         }));
 
+    }
+
+    private void moveBall(BallView ball, int speed, float limitX, float limitY, boolean bounce) {
+        double finalX = ball.getX();
+        double finalY = ball.getY();
+
+        // Convert to radians
+        double angle = ball.getAngle() * Math.PI / 180;
+
+        if (ball.getX() > limitX) {
+            if (!bounce)
+                finalX = 0;
+            else
+                ball.setTowardsX(false);
+        } else if (ball.getX() < 0) {
+            if (!bounce)
+                finalX = limitX;
+            else
+                ball.setTowardsX(true);
+        }
+
+        if (ball.getY() > limitY) {
+            if (!bounce)
+                finalY = 0;
+            else
+                ball.setTowardsY(false);
+        } else if (ball.getY() < 0) {
+            if (!bounce)
+                finalY = limitY;
+            else
+                ball.setTowardsY(true);
+        }
+
+        finalX += Math.cos(angle) * (ball.isTowardsX() ? speed : -speed);
+        finalY += Math.sin(angle) * (ball.isTowardsY() ? speed : -speed);
+
+        ball.setX((float)finalX);
+        ball.setY((float)finalY);
     }
 }
