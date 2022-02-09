@@ -13,22 +13,38 @@ public class BallView extends View {
     private int size;
     private int speed;
     private Paint paint;
-    private int angle;
+    private float angle;
     private boolean bounce;
     private boolean towardsX;
     private boolean towardsY;
 
+    public BallView tmpBall = null;
 
     public BallView(Context context, int size, int speed, boolean bounce, Paint paint) {
         super(context);
         this.size = size;
         this.speed = speed;
         this.paint = paint;
-        this.angle = (int)(Math.random() * 90);
+
+        // Generate an angle between 0 and 90, then convert it to radians
+        this.angle = (int) ((Math.random() * 90) * Math.PI / 180);
+
         this.bounce = bounce;
 
+        // Generate two booleans to know at which direction is moving
         towardsX = Math.random() < 0.5;
         towardsY = Math.random() < 0.5;
+    }
+
+    public BallView(Context context, int size, int speed, Paint paint, float angle, boolean bounce, boolean towardsX, boolean towardsY) {
+        super(context);
+        this.size = size;
+        this.speed = speed;
+        this.paint = paint;
+        this.angle = angle;
+        this.bounce = bounce;
+        this.towardsX = towardsX;
+        this.towardsY = towardsY;
     }
 
     @Override
@@ -37,11 +53,72 @@ public class BallView extends View {
     }
 
     public boolean isOnScreen(float scrWidth, float scrHeight) {
+        // Little margin to make sure the ball isn't on the screen
+        int margin = speed + 10;
+        return this.getX() > 0 - margin && this.getX() < scrWidth + margin && this.getY() > 0 - margin && this.getY() < scrHeight + margin;
+    }
+
+    public boolean isFullyOnScreen(float scrWidth, float scrHeight) {
+        // Little margin to make sure the ball isn't on the screen
         return this.getX() > 0 && this.getX() < scrWidth - size && this.getY() > 0 && this.getY() < scrHeight - size;
     }
 
     public boolean wouldBeOnScreen(float x, float y, float scrWidth, float scrHeight) {
         return x > 0 && x < scrWidth - size && y > 0 && y < scrHeight - size;
+    }
+
+    public BallView checkBorders(float scrWidth, float scrHeight) {
+        float limitX = scrWidth - size;
+        float limitY = scrHeight - size;
+        boolean touchingStartX = getX() < 1;
+        boolean touchingEndX = getX() > limitX;
+        boolean touchingStartY = getY() < 1;
+        boolean touchingEndY = getY() > limitY;
+
+//        System.out.println("x start: " + touchingStartX);
+//        System.out.println("x end: " + touchingEndX);
+//        System.out.println("y start: " + touchingStartY);
+//        System.out.println("y end: " + touchingEndY);
+
+        if (bounce) {
+            if (touchingStartX)
+                towardsX = true;
+            else if (touchingEndX)
+                towardsX = false;
+
+            if (touchingStartY)
+                towardsY = true;
+            else if (touchingEndY)
+                towardsY = false;
+
+            // towardsX = touchingStartX || !touchingEndX;
+            // towardsY = touchingStartY || !touchingEndY;
+        } else if (tmpBall == null) {
+            if (touchingStartX || touchingEndX) {
+                tmpBall = new BallView(this.getContext(), size, speed, paint, angle, bounce, towardsX, towardsY);
+                tmpBall.setX(touchingStartX ? scrWidth : 0);
+                tmpBall.setY(getY());
+            }
+
+            if (touchingStartY || touchingEndY) {
+                tmpBall = new BallView(this.getContext(), size, speed, paint, angle, bounce, towardsX, towardsY);
+                tmpBall.setY(touchingStartY ? scrHeight : 0);
+                tmpBall.setX(getX());
+            }
+            return tmpBall;
+        }
+
+        return null;
+        // return touchingStartX || touchingEndX || touchingStartY || touchingEndY;
+    }
+
+    public void move() {
+        this.setX((float) (getX() + Math.cos(angle) * (towardsX ? speed : -speed)));
+        this.setY((float) (getY() + Math.sin(angle) * (towardsY ? speed : -speed)));
+
+        if (!bounce && tmpBall != null) {
+            tmpBall.move();
+        }
     }
 
     public int getSize() {
@@ -60,11 +137,11 @@ public class BallView extends View {
         this.speed = speed;
     }
 
-    public int getAngle() {
+    public float getAngle() {
         return angle;
     }
 
-    public void setAngle(int angle) {
+    public void setAngle(float angle) {
         this.angle = angle;
     }
 

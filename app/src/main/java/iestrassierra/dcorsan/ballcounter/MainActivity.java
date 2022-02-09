@@ -40,10 +40,10 @@ public class MainActivity extends AppCompatActivity {
             int scrWidth = displayMetrics.widthPixels;
 
             int size = 150;
-            int speed = 15;
-            boolean bounce = true;
+            int speed = 1;
+            boolean bounce = false;
 
-            BallView[] balls = new BallView[30];
+            BallView[] balls = new BallView[3];
 
             Paint paint = new Paint();
             paint.setColor(Color.argb(255, (int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
@@ -65,7 +65,32 @@ public class MainActivity extends AppCompatActivity {
                 while (true) {
                     Thread.sleep(1000 / 60);
                     for (int i = 0; i < balls.length; i++) {
-                        moveBall(balls[i], scrWidth, scrHeight, bounce);
+
+                        BallView tmpBall = balls[i].checkBorders(scrWidth, scrHeight);
+
+                        if (balls[i].tmpBall != null && !balls[i].isOnScreen(scrWidth, scrHeight) && balls[i].tmpBall.isFullyOnScreen(scrWidth, scrHeight)) {
+                            Object lock = new Object();
+                            synchronized (lock) {
+                                int index = i;
+
+                                runOnUiThread(() -> {
+                                    synchronized (lock) {
+                                        container.removeView(balls[index]);
+                                        lock.notify();
+                                    }
+                                });
+                                lock.wait();
+                                balls[i] = balls[i].tmpBall;
+                            }
+                        }
+
+                        if (tmpBall != null)
+                            runOnUiThread(() -> container.addView(tmpBall));
+
+                        balls[i].move();
+                        //moveBall(balls[i], scrWidth, scrHeight, bounce);
+
+
                     }
                 }
             } catch (InterruptedException e) {
