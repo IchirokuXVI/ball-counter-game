@@ -27,11 +27,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        View decorView = getWindow().getDecorView();
-        // Hide the navigation bar, status bar and action bar.
-        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
+        // Hide the action bar.
         ActionBar actionBar = getSupportActionBar();
         actionBar.hide();
 
@@ -44,9 +40,11 @@ public class MainActivity extends AppCompatActivity {
             int scrWidth = displayMetrics.widthPixels;
 
             int size = 150;
-            int speed = 10;
+            int speed = 15;
+            boolean bounce = true;
 
             BallView[] balls = new BallView[30];
+
             Paint paint = new Paint();
             paint.setColor(Color.argb(255, (int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
 
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
 
             for (int i = 0; i < balls.length; i++) {
-                balls[i] = new BallView(this, size, paint);
+                balls[i] = new BallView(this, size, speed, bounce, paint);
                 container.addView(balls[i], params);
                 int margin = 100;
                 balls[i].setY((int)(Math.random() * (scrHeight - (size + margin))));
@@ -66,20 +64,23 @@ public class MainActivity extends AppCompatActivity {
                 Thread.sleep(3000);
                 while (true) {
                     Thread.sleep(1000 / 60);
-                    for (BallView ball : balls) {
-                        moveBall(ball, speed, scrWidth - size, scrHeight - size, true);
+                    for (int i = 0; i < balls.length; i++) {
+                        moveBall(balls[i], scrWidth, scrHeight, bounce);
                     }
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }));
-
     }
 
-    private void moveBall(BallView ball, int speed, float limitX, float limitY, boolean bounce) {
+    private void moveBall(BallView ball, float scrWidth, float scrHeight, boolean bounce) {
+        int size = ball.getSize();
+        int speed = ball.getSpeed();
         double finalX = ball.getX();
         double finalY = ball.getY();
+        float limitX = scrWidth - size;
+        float limitY = scrHeight - size;
 
         // Convert to radians
         double angle = ball.getAngle() * Math.PI / 180;
