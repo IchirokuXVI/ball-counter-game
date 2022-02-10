@@ -27,7 +27,7 @@ public class BallView extends View {
         this.paint = paint;
 
         // Generate an angle between 0 and 90, then convert it to radians
-        this.angle = (int) ((Math.random() * 90) * Math.PI / 180);
+        this.angle = (float) (45 * Math.PI / 180);
 
         this.bounce = bounce;
 
@@ -53,13 +53,10 @@ public class BallView extends View {
     }
 
     public boolean isOnScreen(float scrWidth, float scrHeight) {
-        // Little margin to make sure the ball isn't on the screen
-        int margin = speed + 10;
-        return this.getX() > 0 - margin && this.getX() < scrWidth + margin && this.getY() > 0 - margin && this.getY() < scrHeight + margin;
+        return this.getX() > 0 && this.getX() < scrWidth && this.getY() > 0 && this.getY() < scrHeight;
     }
 
     public boolean isFullyOnScreen(float scrWidth, float scrHeight) {
-        // Little margin to make sure the ball isn't on the screen
         return this.getX() > 0 && this.getX() < scrWidth - size && this.getY() > 0 && this.getY() < scrHeight - size;
     }
 
@@ -67,13 +64,31 @@ public class BallView extends View {
         return x > 0 && x < scrWidth - size && y > 0 && y < scrHeight - size;
     }
 
+    public boolean isFullyOnScreenExceptBorder(float scrWidth, float scrHeight) {
+        float limitX = scrWidth - size;
+        float limitY = scrHeight - size;
+        boolean touchingStartX = !towardsX && getX() < 0;
+        boolean touchingEndX = towardsX && getX() > limitX;
+        boolean touchingStartY = !towardsY && getY() < 0;
+        boolean touchingEndY = towardsY && getY() > limitY;
+
+        if (towardsX && towardsY)
+            return !(touchingEndX && touchingEndY);
+        else if (!towardsX && !towardsY)
+            return !(touchingStartX && touchingStartY);
+        else if (!towardsX && towardsY)
+            return !(touchingStartX && touchingEndY);
+        else // if (towardsX && !towardsY) // Last possible case
+            return !(touchingEndX && touchingStartY);
+    }
+
     public BallView checkBorders(float scrWidth, float scrHeight) {
         float limitX = scrWidth - size;
         float limitY = scrHeight - size;
-        boolean touchingStartX = getX() < 1;
-        boolean touchingEndX = getX() > limitX;
-        boolean touchingStartY = getY() < 1;
-        boolean touchingEndY = getY() > limitY;
+        boolean touchingStartX = !towardsX && getX() < 1;
+        boolean touchingEndX = towardsX && getX() > limitX;
+        boolean touchingStartY = !towardsY && getY() < 1;
+        boolean touchingEndY = towardsY && getY() > limitY;
 
 //        System.out.println("x start: " + touchingStartX);
 //        System.out.println("x end: " + touchingEndX);
@@ -91,20 +106,27 @@ public class BallView extends View {
             else if (touchingEndY)
                 towardsY = false;
 
-            // towardsX = touchingStartX || !touchingEndX;
-            // towardsY = touchingStartY || !touchingEndY;
-        } else if (tmpBall == null) {
-            if (touchingStartX || touchingEndX) {
-                tmpBall = new BallView(this.getContext(), size, speed, paint, angle, bounce, towardsX, towardsY);
-                tmpBall.setX(touchingStartX ? scrWidth : 0);
-                tmpBall.setY(getY());
-            }
+        } else if (tmpBall == null && (touchingStartX || touchingEndX || touchingStartY || touchingEndY)) {
+            float finalX = getX();
+            float finalY = getY();
 
-            if (touchingStartY || touchingEndY) {
-                tmpBall = new BallView(this.getContext(), size, speed, paint, angle, bounce, towardsX, towardsY);
-                tmpBall.setY(touchingStartY ? scrHeight : 0);
-                tmpBall.setX(getX());
-            }
+            tmpBall = new BallView(this.getContext(), size, speed, paint, angle, bounce, towardsX, towardsY);
+
+            if (touchingStartX)
+                finalX = getX() + scrWidth;
+            else if (touchingEndX)
+                finalX = getX() - scrWidth;
+
+            if (touchingStartY)
+                finalY = getY() + scrHeight;
+            else if (touchingEndY)
+                finalY = getY() - scrHeight;
+
+            tmpBall.setX(finalX);
+            tmpBall.setY(finalY);
+
+            System.out.println(this);
+
             return tmpBall;
         }
 
@@ -167,5 +189,20 @@ public class BallView extends View {
 
     public void setTowardsY(boolean towardsY) {
         this.towardsY = towardsY;
+    }
+
+    @Override
+    public String toString() {
+        return "BallView{" +
+                "size=" + size +
+                ", speed=" + speed +
+                ", angle=" + angle +
+                ", bounce=" + bounce +
+                ", x=" + getX() +
+                ", y=" + getY() +
+                ", towardsX=" + towardsX +
+                ", towardsY=" + towardsY +
+                ", tmpBall=" + tmpBall +
+                '}';
     }
 }
