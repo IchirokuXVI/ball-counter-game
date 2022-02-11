@@ -37,14 +37,12 @@ public class MainActivity extends AppCompatActivity {
 
             BallView[] balls = new BallView[16];
 
-            Paint paint = new Paint();
-            paint.setColor(Color.argb(255, (int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
-
-            paint.setStyle(Paint.Style.FILL);
-
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
 
             for (int i = 0; i < balls.length; i++) {
+                Paint paint = new Paint();
+                paint.setColor(Color.argb(255, (int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
+                paint.setStyle(Paint.Style.FILL);
                 balls[i] = new BallView(this, size, speed, bounce, paint);
                 container.addView(balls[i], params);
                 int margin = 100;
