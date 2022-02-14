@@ -1,12 +1,11 @@
 package iestrassierra.dcorsan.ballcounter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.ViewTreeObserver;
+import android.view.ViewGroup;
 
 public class BallView extends View {
 
@@ -18,7 +17,7 @@ public class BallView extends View {
     private boolean towardsX;
     private boolean towardsY;
 
-    public BallView tmpBall = null;
+    public BallView tmpBall;
 
     public BallView(Context context, int size, int speed, boolean bounce, Paint paint) {
         super(context);
@@ -34,6 +33,11 @@ public class BallView extends View {
         // Generate two booleans to know at which direction is moving
         towardsX = Math.random() < 0.5;
         towardsY = Math.random() < 0.5;
+
+        if (!bounce) {
+            tmpBall = new BallView(this.getContext(), size, speed, paint, angle, bounce, towardsX, towardsY);
+            setTmpBallVisiblity(View.GONE);
+        }
     }
 
     public BallView(Context context, int size, int speed, Paint paint, float angle, boolean bounce, boolean towardsX, boolean towardsY) {
@@ -85,7 +89,7 @@ public class BallView extends View {
             return !(touchingEndX && touchingStartY);
     }
 
-    public BallView checkBorders(float scrWidth, float scrHeight) {
+    public void checkBorders(float scrWidth, float scrHeight) {
         float limitX = scrWidth - size;
         float limitY = scrHeight - size;
         boolean touchingStartX = !towardsX && getX() < 1;
@@ -106,11 +110,11 @@ public class BallView extends View {
             else if (touchingEndY)
                 towardsY = false;
 
-        } else if (tmpBall == null && (touchingStartX || touchingEndX || touchingStartY || touchingEndY)) {
-            float finalX =getX();
+        } else if (tmpBall != null && tmpBall.getVisibility() == View.GONE && (touchingStartX || touchingEndX || touchingStartY || touchingEndY)) {
+            float finalX = getX();
             float finalY = getY();
 
-            tmpBall = new BallView(this.getContext(), size, speed, paint, angle, bounce, towardsX, towardsY);
+            setTmpBallVisiblity(View.VISIBLE);
 
             if (touchingStartX)
                 finalX = getX() + scrWidth;
@@ -124,20 +128,32 @@ public class BallView extends View {
 
             tmpBall.setX(finalX);
             tmpBall.setY(finalY);
-
-            return tmpBall;
+        } else if (tmpBall != null && tmpBall.getVisibility() == View.VISIBLE && !this.isOnScreen(scrWidth, scrHeight) && tmpBall.isFullyOnScreenExceptBorder(scrWidth, scrHeight)) {
+            replaceTmpBall();
         }
-
-        return null;
     }
 
-    public void move() {
+    public void move(int scrWidth, int scrHeight) {
+        checkBorders(scrWidth, scrHeight);
+
         this.setX((float) (getX() + Math.cos(angle) * (towardsX ? speed : -speed)));
         this.setY((float) (getY() + Math.sin(angle) * (towardsY ? speed : -speed)));
 
-        if (!bounce && tmpBall != null) {
-            tmpBall.move();
+        if (!bounce && tmpBall != null && tmpBall.getVisibility() == View.VISIBLE) {
+            tmpBall.move(scrWidth, scrHeight);
         }
+    }
+
+    public void replaceTmpBall() {
+        setTmpBallVisiblity(View.GONE);
+        this.setX(tmpBall.getX());
+        this.setY(tmpBall.getY());
+    }
+
+    public void setTmpBallVisiblity(int visiblity) {
+        ((Activity) this.getContext()).runOnUiThread(() -> {
+            tmpBall.setVisibility(visiblity);
+        });
     }
 
     public int getSize() {
@@ -170,6 +186,9 @@ public class BallView extends View {
 
     public void setBounce(boolean bounce) {
         this.bounce = bounce;
+
+        if (tmpBall != null)
+            setTmpBallVisiblity(View.GONE);
     }
 
     public boolean isTowardsX() {

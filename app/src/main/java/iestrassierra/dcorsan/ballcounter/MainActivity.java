@@ -10,11 +10,14 @@ import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
+    public static boolean STOP_BALLS = false;
+
     FrameLayout container;
     ExecutorService executorService  = Executors.newFixedThreadPool(4);
 
@@ -25,66 +28,65 @@ public class MainActivity extends AppCompatActivity {
 
         container = findViewById(R.id.container);
 
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int scrHeight = displayMetrics.heightPixels - getNavigationBarHeight();
+        int scrWidth = displayMetrics.widthPixels;
+
+        int size = 150;
+        int speed = 20;
+        boolean bounce = false;
+
+        BallView[] balls = new BallView[6];
+
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
+
+        container.setOnClickListener((v) -> {
+            STOP_BALLS = !STOP_BALLS;
+            synchronized (balls) {
+                balls.notify();
+            }
+        });
+
+        container.setOnLongClickListener((v) -> {
+            STOP_BALLS = true;
+            synchronized (balls) {
+                for (BallView ball : balls)
+                    ball.setBounce(!ball.isBounce());
+                STOP_BALLS = false;
+
+                Toast.makeText(this, "Rebote/atravesar intercambiado", Toast.LENGTH_LONG);
+                balls.notify();
+            }
+            return true;
+        });
+
         executorService.execute(() -> {
-            DisplayMetrics displayMetrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-            int scrHeight = displayMetrics.heightPixels - getNavigationBarHeight();
-            int scrWidth = displayMetrics.widthPixels;
-
-            int size = 150;
-            int speed = 35;
-            boolean bounce = false;
-
-            BallView[] balls = new BallView[16];
-
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
-
             for (int i = 0; i < balls.length; i++) {
                 Paint paint = new Paint();
                 paint.setColor(Color.argb(255, (int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
                 paint.setStyle(Paint.Style.FILL);
                 balls[i] = new BallView(this, size, speed, bounce, paint);
-                container.addView(balls[i], params);
+                int index = i;
+                runOnUiThread(() -> {
+                    container.addView(balls[index], params);
+                    container.addView(balls[index].tmpBall, params);
+                });
                 int margin = 100;
                 balls[i].setY((int)(Math.random() * (scrHeight - (size + margin))));
                 balls[i].setX((int)(Math.random() * (scrWidth - (size + margin))));
             }
 
             try {
-                int counter = 0;
-                while (true) {
-                    //counter++;
-                    Thread.sleep(1000/60);
-                    for (int i = 0; i < balls.length; i++) {
-
-                        BallView tmpBall = balls[i].checkBorders(scrWidth, scrHeight);
-
-                        // Si no se ha creado una bola temporal pero ya había una de antes...
-                        if (tmpBall == null && balls[i].tmpBall != null) {
-                            if (!balls[i].isOnScreen(scrWidth, scrHeight) && balls[i].tmpBall.isFullyOnScreenExceptBorder(scrWidth, scrHeight)) {
-                                int index = i;
-
-                                // Auxiliar variable to hold the ball that is going to be removed
-                                BallView viewToDestroy = balls[index];
-                                balls[i] = viewToDestroy.tmpBall;
-
-                                // By using the auxiliar variable I can avoid synchronizing
-                                // the current thread with the ui thread
-                                runOnUiThread(() -> {
-                                    container.removeView(viewToDestroy);
-                                    System.out.println(container.getChildCount());
-                                });
-                            }
+                synchronized (balls) {
+                    while (true) {
+                        while (STOP_BALLS)
+                            balls.wait();
+                        Thread.sleep(1000/60);
+                        for (int i = 0; i < balls.length; i++) {
+                            balls[i].move(scrWidth, scrHeight);
                         }
-
-                        if (tmpBall != null)
-                            runOnUiThread(() -> container.addView(tmpBall));
-
-                        balls[i].move();
                     }
-
-                    //if (counter % 500 == 0)
-                        //Thread.sleep(3000);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
