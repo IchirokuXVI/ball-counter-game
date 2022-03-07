@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="8"
+        android:entries="@array/speed_names"
+        android:entryValues="@array/speed_values"
+        android:key="speed"
+        android:title="@string/speed" />
+    <ListPreference
+        android:defaultValue="20"
+        android:entries="@array/game_time_values"
+        android:entryValues="@array/game_time_values"
+        android:key="time"
+        android:title="@string/game_time" />
+    <ListPreference
+        android:defaultValue="4"
+        android:entries="@array/max_balls_values"
+        android:entryValues="@array/max_balls_values"
+        android:key="max_balls"
+        android:title="@string/max_balls" />
+    <ListPreference
+        android:defaultValue="4"
+        android:entries="@array/num_colors_values"
+        android:entryValues="@array/num_colors_values"
+        android:key="num_colors"
+        android:title="@string/num_colors" />
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="bounce"
+        android:title="@string/bounce" />
+</PreferenceScreen>

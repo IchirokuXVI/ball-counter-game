@@ -3,6 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Ichiroku/Desktop/ball-counter-game/app/src/main/res/layout/activity_balls.xml" value="0.33" />
+        <entry key="..\:/Users/Ichiroku/Desktop/ball-counter-game/app/src/main/res/layout/activity_final.xml" value="0.38697916666666665" />
+        <entry key="..\:/Users/Ichiroku/Desktop/ball-counter-game/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/Users/Ichiroku/Desktop/ball-counter-game/app/src/main/res/menu/main_menu.xml" value="0.38697916666666665" />
+        <entry key="..\:/Users/Ichiroku/Desktop/ball-counter-game/app/src/main/res/xml/preferences.xml" value="0.38697916666666665" />
         <entry key="..\:/Users/Usuario/Desktop/ball-counter-game/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
       </map>
     </option>

@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Ball Counter</string>
+    <string name="title">Ball Counter</string>
+    <string name="description">Count as many balls as you can !</string>
+    <string name="start">Start</string>
+    <string name="preferences">Preferencias</string>
+    <string name="speed">Speed</string>
+    <string name="game_time">Game Time (seconds)</string>
+    <string name="max_balls">Maximum number of balls per color</string>
+    <string name="num_colors">Number of colors</string>
+    <string name="bounce">Bounce</string>
+    <string name="balls_ready">READY</string>
+    <string name="balls_set">SET</string>
+    <string name="balls_go">¡GOOO!</string>
+    <string name="final_number_balls">Could you count all the balls ?</string>
+    <string name="check_it">Let\'s check</string>
 </resources>
